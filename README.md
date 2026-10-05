@@ -4,7 +4,7 @@ Functional & immutable HTML builder for PHP 8.1+.
 
 [![CI](https://github.com/D-Synx/Sublime/actions/workflows/ci.yml/badge.svg)](https://github.com/D-Synx/Sublime/actions/workflows/ci.yml)
 ![Packagist version](https://img.shields.io/badge/packagist-coming%20soon-lightgrey)
-![License](https://img.shields.io/github/license/DarkSynx/Sublime)
+![License](https://img.shields.io/github/license/D-Synx/Sublime)
 
 ## Installation
 
