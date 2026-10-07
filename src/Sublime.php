@@ -354,7 +354,9 @@ final class HtmlElement implements Stringable
 
         foreach ($this->children as $child) {
             if ($child instanceof self) {
-                yield from $child->stream();
+                foreach ($child->stream() as $chunk) {
+                    yield $chunk;
+                }
             } else {
                 yield ChildValues::render($child);
             }
