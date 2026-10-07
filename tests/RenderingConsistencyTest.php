@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Sublime\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Sublime\Component;
-use Sublime\HtmlElement;
 
 use function Sublime\body_;
+
+use Sublime\Component;
+
 use function Sublime\div_;
 use function Sublime\document;
 use function Sublime\fragment;
 use function Sublime\html_;
+
+use Sublime\HtmlElement;
+
 use function Sublime\p_;
 use function Sublime\raw_html;
 
@@ -51,7 +55,7 @@ final class RenderingConsistencyTest extends TestCase
 
     public function testComponentTraitRendersItsElementAndStringableIsEscapedAsText(): void
     {
-        $component = new class {
+        $component = new class () {
             use Component;
             public function render(): HtmlElement
             {

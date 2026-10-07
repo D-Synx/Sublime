@@ -6,13 +6,12 @@ namespace Sublime\Tests;
 
 use PHPUnit\Framework\TestCase;
 
-use function Sublime\Sublime;
-
-use Sublime\TagFactory;
-
 use function Sublime\body_;
 use function Sublime\div_;
 use function Sublime\p_;
+use function Sublime\Sublime;
+
+use Sublime\TagFactory;
 
 final class TagFactoryTest extends TestCase
 {

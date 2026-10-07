@@ -8,9 +8,11 @@ use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Stringable;
-use Sublime\HtmlElement;
 
 use function Sublime\div_;
+
+use Sublime\HtmlElement;
+
 use function Sublime\input_;
 
 final class AttributeRenderingTest extends TestCase
@@ -83,7 +85,7 @@ final class AttributeRenderingTest extends TestCase
 
     public function testStringableAttributeIsCapturedOnceAndEscaped(): void
     {
-        $value = new class implements Stringable {
+        $value = new class () implements Stringable {
             public int $calls = 0;
             public function __toString(): string
             {

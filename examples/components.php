@@ -5,6 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use Sublime\HtmlElement;
+
 use function Sublime\{Sublime, a_, body_, footer_, h2_, main_, nav_, p_, section_, small_};
 
 function navbar(): HtmlElement

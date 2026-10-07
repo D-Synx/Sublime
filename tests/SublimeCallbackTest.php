@@ -8,12 +8,13 @@ use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Sublime\HtmlElement;
-use Sublime\TagFactory;
 
 use function Sublime\p_;
 use function Sublime\raw_html;
 use function Sublime\Sublime;
 use function Sublime\sublime_;
+
+use Sublime\TagFactory;
 
 function namedFactoryCallback(TagFactory $tags): HtmlElement
 {
@@ -65,13 +66,27 @@ final class SublimeCallbackTest extends TestCase
             $called = true;
         };
         $callback = match ($signature) {
-            'two' => function ($first, $second = null) use ($record): void { $record(); },
-            'scalar' => function (string $tags) use ($record): void { $record(); },
-            'object' => function (object $tags) use ($record): void { $record(); },
-            'mixed' => function (mixed $tags) use ($record): void { $record(); },
-            'union' => function (TagFactory|string $tags) use ($record): void { $record(); },
-            'variadic' => function (...$tags) use ($record): void { $record(); },
-            'reference' => function (&$tags) use ($record): void { $record(); },
+            'two' => function ($first, $second = null) use ($record): void {
+                $record();
+            },
+            'scalar' => function (string $tags) use ($record): void {
+                $record();
+            },
+            'object' => function (object $tags) use ($record): void {
+                $record();
+            },
+            'mixed' => function (mixed $tags) use ($record): void {
+                $record();
+            },
+            'union' => function (TagFactory|string $tags) use ($record): void {
+                $record();
+            },
+            'variadic' => function (...$tags) use ($record): void {
+                $record();
+            },
+            'reference' => function (&$tags) use ($record): void {
+                $record();
+            },
             default => throw new \LogicException('Unknown callback test signature.'),
         };
         try {

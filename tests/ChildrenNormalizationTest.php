@@ -9,10 +9,12 @@ use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Stringable;
-use Sublime\HtmlElement;
 
 use function Sublime\div_;
 use function Sublime\fragment;
+
+use Sublime\HtmlElement;
+
 use function Sublime\p_;
 use function Sublime\raw_html;
 
@@ -33,7 +35,7 @@ final class ChildrenNormalizationTest extends TestCase
         yield 'raw' => [raw_html('<b>&</b>'), '<b>&</b>'];
         yield 'nested arrays' => [['a', ['b', null, false, [true]]], 'ab1'];
         yield 'iterable' => [new ArrayObject(['a', p_('b')]), 'a<p>b</p>'];
-        yield 'stringable' => [new class implements Stringable {
+        yield 'stringable' => [new class () implements Stringable {
             public function __toString(): string
             {
                 return '<b>&';
@@ -58,7 +60,7 @@ final class ChildrenNormalizationTest extends TestCase
 
     public function testStringableIsCapturedOnceAtConstruction(): void
     {
-        $text = new class implements Stringable {
+        $text = new class () implements Stringable {
             public int $calls = 0;
             public function __toString(): string
             {
