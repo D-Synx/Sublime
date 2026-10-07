@@ -162,14 +162,388 @@ final class TagFactory
      * Forward helper to render fragments.
      */
     public function fragment(mixed ...$children): string
+    {
+        return fragment(...$children);
+    }
+
+    private function normalizeTagName(string $name): string
+    {
+        $name = strtolower($name);
+
+        if (str_ends_with($name, '_')) {
+            $name = substr($name, 0, -1);
+        }
+
+        return $name;
+    }
+}
+
+/**
+ * Immutable HTML Element Builder
+ *
+ * Features:
+ * - XSS protection with automatic escaping
+ * - Type-safe API with named parameters
+ * - Performance optimized with render caching
+ * - Supports all HTML5 elements and attributes
+ * - CSP-friendly with nonce support
+ *
+ * @psalm-immutable
+ */
+final class HtmlElement implements Stringable
 {
-    $html = '';
-    foreach ($children as $child) {
-        foreach (ChildValues::normalize($child) as $item) {
-            $html .= ChildValues::render($item);
+    /** @var array<string, true> */
+    private const VOID_ELEMENTS = [
+        'area' => true, 'base' => true, 'br' => true, 'col' => true,
+        'embed' => true, 'hr' => true, 'img' => true, 'input' => true,
+        'link' => true, 'meta' => true, 'param' => true, 'source' => true,
+        'track' => true, 'wbr' => true
+    ];
+
+    /** @var array<string, true> */
+    private const BOOLEAN_ATTRS = [
+        'disabled' => true, 'readonly' => true, 'required' => true,
+        'checked' => true, 'selected' => true, 'multiple' => true,
+        'autofocus' => true, 'autoplay' => true, 'controls' => true,
+        'loop' => true, 'muted' => true, 'open' => true,
+        'reversed' => true, 'novalidate' => true, 'formnovalidate' => true,
+        'async' => true, 'defer' => true, 'ismap' => true,
+        'itemscope' => true, 'allowfullscreen' => true
+    ];
+
+    /** @var array<string, true> */
+    private const DANGEROUS_PROTOCOLS = [
+        'javascript:' => true,
+        'data:text/html' => true,
+        'vbscript:' => true
+    ];
+
+    private ?string $cachedRender = null;
+
+    /** @var list<HtmlElement|RawHtml|string> */
+    private readonly array $children;
+
+    /**
+     * @param array<string, mixed> $attributes
+     * @param array<mixed> $children
+     */
+    public function __construct(
+        private readonly string $tag,
+        private readonly array $attributes = [],
+        array $children = []
+    ) {
+        $this->validateTag($tag);
+        $this->validateAttributes($attributes);
+        $normalized = [];
+        foreach ($children as $child) {
+            foreach (ChildValues::normalize($child) as $item) {
+                $normalized[] = $item;
+            }
+        }
+        $this->children = $normalized;
+    }
+
+    /**
+     * Create element from flexible arguments
+     *
+     * @param string $tag HTML tag name
+     * @param mixed ...$args Attributes (named) and children (data key or positional)
+     * @return self
+     *
+     * @example
+     * div_(class: 'container', data: [h1_('Title')])
+     * a_(href: '/home', 'Click me')
+     */
+    public static function create(string $tag, mixed ...$args): self
+    {
+        $attributes = [];
+        $children = [];
+
+        foreach ($args as $key => $value) {
+            if (is_int($key)) {
+                // Positional argument = child content
+                $children[] = $value;
+            } elseif ($key === 'data') {
+                // Explicit 'data' key = child content
+                $children[] = $value;
+            } else {
+                // Named argument = attribute
+                $attributes[$key] = $value;
+            }
+        }
+
+        return new self($tag, $attributes, $children);
+    }
+
+    /**
+     * Add child elements (immutable - returns new instance)
+     *
+     * @param mixed ...$children
+     * @return self
+     */
+    public function withChildren(mixed ...$children): self
+    {
+        return new self(
+            $this->tag,
+            $this->attributes,
+            array_merge($this->children, $children)
+        );
+    }
+
+    /**
+     * Add or update attributes (immutable - returns new instance)
+     *
+     * @param array<string, mixed> $attributes
+     * @return self
+     */
+    public function withAttributes(array $attributes): self
+    {
+        return new self(
+            $this->tag,
+            array_merge($this->attributes, $attributes),
+            $this->children
+        );
+    }
+
+    /**
+     * Render to HTML string with caching
+     *
+     * @return string
+     */
+    public function render(): string
+    {
+        if ($this->cachedRender !== null) {
+            return $this->cachedRender;
+        }
+
+        $html = '<' . $this->tag;
+        $html .= $this->renderAttributes();
+
+        if ($this->isVoidElement()) {
+            return $this->cachedRender = $html . '>';
+        }
+
+        $html .= '>';
+        $html .= $this->renderChildren();
+        $html .= '</' . $this->tag . '>';
+
+        return $this->cachedRender = $html;
+    }
+
+    public function __toString(): string
+    {
+        return $this->render();
+    }
+
+    /**
+     * Stream render for large documents (no caching)
+     *
+     * @return \Generator<string>
+     */
+    public function stream(): \Generator
+    {
+        yield '<' . $this->tag;
+        yield $this->renderAttributes();
+
+        if ($this->isVoidElement()) {
+            yield '>';
+            return;
+        }
+
+        yield '>';
+
+        foreach ($this->children as $child) {
+            if ($child instanceof self) {
+                yield from $child->stream();
+            } else {
+                yield ChildValues::render($child);
+            }
+        }
+
+        yield '</' . $this->tag . '>';
+    }
+
+    /**
+     * Render attributes with proper escaping and validation
+     *
+     * @return string
+     */
+    private function renderAttributes(): string
+    {
+        if (empty($this->attributes)) {
+            return '';
+        }
+
+        $parts = [];
+
+        foreach ($this->attributes as $name => $value) {
+            // Skip null/false values
+            if ($value === null || $value === false) {
+                continue;
+            }
+
+            // Boolean attributes
+            if (isset(self::BOOLEAN_ATTRS[$name])) {
+                if ($value) {
+                    $parts[] = $name;
+                }
+                continue;
+            }
+
+            // Style array to string
+            if ($name === 'style' && is_array($value)) {
+                $value = $this->renderStyleArray($value);
+                if ($value === '') {
+                    continue;
+                }
+            }
+
+            // Class array to string
+            if ($name === 'class' && is_array($value)) {
+                $value = implode(' ', array_filter($value, fn ($v) => $v !== ''));
+                if ($value === '') {
+                    continue;
+                }
+            }
+
+            // URL validation for security-sensitive attributes
+            if (in_array($name, ['href', 'src', 'action', 'formaction'], true)) {
+                $this->validateUrl((string) $value);
+            }
+
+            $escaped = htmlspecialchars(
+                (string) $value,
+                ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE,
+                'UTF-8'
+            );
+
+            $parts[] = sprintf('%s="%s"', $name, $escaped);
+        }
+
+        return empty($parts) ? '' : ' ' . implode(' ', $parts);
+    }
+
+    /**
+     * Render child elements
+     *
+     * @return string
+     */
+    private function renderChildren(): string
+    {
+        return implode('', array_map(
+            ChildValues::render(...),
+            $this->children
+        ));
+    }
+
+    /**
+     * Render style array to CSS string
+     *
+     * @param array<string, mixed> $styles
+     * @return string
+     */
+    private function renderStyleArray(array $styles): string
+    {
+        $parts = [];
+        foreach ($styles as $property => $value) {
+            if ($value !== null && $value !== '') {
+                // Basic CSS property validation
+                if (!preg_match('/^[a-z-]+$/i', $property)) {
+                    continue;
+                }
+                $parts[] = $property . ':' . $value;
+            }
+        }
+        return implode(';', $parts);
+    }
+
+    /**
+     * Check if element is void (self-closing)
+     *
+     * @return bool
+     */
+    private function isVoidElement(): bool
+    {
+        return isset(self::VOID_ELEMENTS[strtolower($this->tag)]);
+    }
+
+    /**
+     * Validate tag name
+     *
+     * @param string $tag
+     * @throws InvalidArgumentException
+     */
+    private function validateTag(string $tag): void
+    {
+        if (!preg_match('/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/i', $tag)) {
+            throw new InvalidArgumentException("Invalid HTML tag: {$tag}");
         }
     }
-    return $html;
+
+    /**
+     * Validate attributes for common security issues
+     *
+     * @param array<string, mixed> $attributes
+     * @throws InvalidArgumentException
+     */
+    private function validateAttributes(array $attributes): void
+    {
+        foreach ($attributes as $name => $value) {
+            // Validate attribute name
+            if (!preg_match('/^[a-z][a-z0-9_:-]*$/i', (string) $name)) {
+                throw new InvalidArgumentException("Invalid attribute name: {$name}");
+            }
+
+            // Block on* event handlers (use proper event listeners instead)
+            if (str_starts_with(strtolower($name), 'on')) {
+                throw new InvalidArgumentException(
+                    "Inline event handlers are not allowed for security. Use addEventListener instead: {$name}"
+                );
+            }
+        }
+    }
+
+    /**
+     * Validate URL for dangerous protocols
+     *
+     * @param string $url
+     * @throws InvalidArgumentException
+     */
+    private function validateUrl(string $url): void
+    {
+        $url = strtolower(trim($url));
+
+        foreach (self::DANGEROUS_PROTOCOLS as $protocol => $_) {
+            if (str_starts_with($url, $protocol)) {
+                throw new InvalidArgumentException(
+                    "Dangerous protocol detected in URL: {$protocol}"
+                );
+            }
+        }
+    }
+}
+
+/**
+ * Component trait for creating reusable components
+ */
+trait Component
+{
+    /**
+     * Render the component
+     *
+     * @return HtmlElement
+     */
+    abstract public function render(): HtmlElement;
+
+    /**
+     * Convert to string
+     *
+     * @return string
+     */
+    public function __toString(): string
+    {
+        return $this->render()->render();
+    }
 }
 
 // ============================================================================
@@ -218,19 +592,13 @@ function document(HtmlElement $html): string
  */
 function fragment(mixed ...$children): string
 {
-    $normalized = [];
+    $html = '';
     foreach ($children as $child) {
-        if ($child instanceof HtmlElement) {
-            $normalized[] = $child->render();
-        } elseif ($child instanceof RawHtml) {
-            $normalized[] = (string) $child;
-        } elseif (is_array($child)) {
-            $normalized[] = fragment(...$child);
-        } else {
-            $normalized[] = htmlspecialchars((string) $child, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        foreach (ChildValues::normalize($child) as $item) {
+            $html .= ChildValues::render($item);
         }
     }
-    return implode('', $normalized);
+    return $html;
 }
 
 // ============================================================================
