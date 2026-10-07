@@ -6,8 +6,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use function Sublime\{Sublime, body_, div_, h1_, li_, p_, ul_};
 
-$user = 'guest';
-$notifications = ['Nouveauté & simplicité', 'Documentation mise à jour'];
+$user = $argv[1] ?? 'guest';
+$notifications = ($argv[2] ?? '') === 'empty' ? [] : ['Nouveauté & simplicité', 'Documentation mise à jour'];
 $items = [];
 
 foreach ($notifications as $notification) {

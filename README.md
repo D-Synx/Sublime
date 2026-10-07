@@ -200,6 +200,7 @@ composer dump-autoload --optimize --strict-psr
 php examples/basic.php
 php examples/components.php
 php examples/conditions.php
+php examples/conditions.php admin empty
 php index.php
 ```
 
