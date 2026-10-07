@@ -1177,25 +1177,19 @@ function template_(mixed ...$args): HtmlElement
  * @param callable(): (HtmlElement|RawHtml|string|null) $callback Callback that returns renderable output.
  * @return string
  */
-function Sublime(callable $callback): string
+function Sublime(HtmlElement|RawHtml|callable|null $data, string $uclass = 'html'): string
 {
+    if ($uclass !== 'html') {
+        throw new InvalidArgumentException("Unknown Sublime mode: {$uclass}");
+    }
+
     $factory = new TagFactory();
-    $args = shouldInjectFactory($callback) ? [$factory] : [];
-    $result = $callback(...$args);
-
-    if ($result instanceof HtmlElement) {
-        return $result->render();
+    if ($data !== null && !$data instanceof HtmlElement && !$data instanceof RawHtml) {
+        $args = shouldInjectFactory($data) ? [$factory] : [];
+        $data = $data(...$args);
     }
 
-    if ($result instanceof RawHtml) {
-        return (string) $result;
-    }
-
-    if ($result === null) {
-        return '';
-    }
-
-    return (string) $result;
+    return $factory->fragment($data);
 }
 
 /**
@@ -1219,16 +1213,6 @@ function shouldInjectFactory(callable $callback): bool
     }
 
     return $reflection->getNumberOfParameters() > 0;
-}
-
-/**
- * Lowercase helper alias for convenience.
- *
- * @return string
- */
-function sublime(callable $view): string
-{
-    return Sublime($view);
 }
 
 /**
