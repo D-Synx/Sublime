@@ -24,13 +24,13 @@ final class BasicRenderingTest extends TestCase
 
     public function testCanUseShortNamedHtmlModeWithoutCallback(): void
     {
-        $html = Sublime(uclass: 'html', data: body_(data: div_(class: 'app', data: p_('Hello'))));
+        $html = Sublime(class: 'html', data: body_(data: div_(class: 'app', data: p_('Hello'))));
         self::assertSame('<body><div class="app"><p>Hello</p></div></body>', $html);
     }
 
     public function testCanPutContentBeforeModeOption(): void
     {
-        self::assertSame('<p>Hello</p>', Sublime(p_('Hello'), uclass: 'html'));
+        self::assertSame('<p>Hello</p>', Sublime(p_('Hello'), class: 'html'));
     }
 
     public function testRawHtmlCanRenderDirectly(): void
@@ -49,7 +49,7 @@ final class BasicRenderingTest extends TestCase
         try {
             Sublime(function () use (&$called): void {
                 $called = true;
-            }, uclass: 'unknown');
+            }, class: 'unknown');
             self::fail('Unsupported mode should throw.');
         } catch (InvalidArgumentException $exception) {
             self::assertStringContainsString('unknown', $exception->getMessage());

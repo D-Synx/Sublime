@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Sublime\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Sublime\TagFactory;
+
 use function Sublime\Sublime;
+
+use Sublime\TagFactory;
 
 final class TagFactoryTest extends TestCase
 {
@@ -41,3 +43,4 @@ final class TagFactoryTest extends TestCase
         self::assertSame('<main><p>Content</p></main>', $element->render());
     }
 }
+

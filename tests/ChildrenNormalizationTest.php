@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sublime\Tests;
 
 use PHPUnit\Framework\TestCase;
+
 use function Sublime\div_;
 
 final class ChildrenNormalizationTest extends TestCase
@@ -21,3 +22,4 @@ final class ChildrenNormalizationTest extends TestCase
         self::assertSame('<div>HelloWorld<div>!</div></div>', $html);
     }
 }
+

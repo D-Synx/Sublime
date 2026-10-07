@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Sublime;
@@ -25,14 +26,15 @@ use Stringable;
 
 /**
  * Represents raw HTML content that should not be escaped
- * 
+ *
  * @psalm-immutable
  */
 final class RawHtml implements Stringable
 {
     public function __construct(
         public readonly string $html
-    ) {}
+    ) {
+    }
 
     public function __toString(): string
     {
@@ -107,14 +109,14 @@ final class TagFactory
 
 /**
  * Immutable HTML Element Builder
- * 
+ *
  * Features:
  * - XSS protection with automatic escaping
  * - Type-safe API with named parameters
  * - Performance optimized with render caching
  * - Supports all HTML5 elements and attributes
  * - CSP-friendly with nonce support
- * 
+ *
  * @psalm-immutable
  */
 final class HtmlElement implements Stringable
@@ -126,7 +128,7 @@ final class HtmlElement implements Stringable
         'link' => true, 'meta' => true, 'param' => true, 'source' => true,
         'track' => true, 'wbr' => true
     ];
-    
+
     /** @var array<string, true> */
     private const BOOLEAN_ATTRS = [
         'disabled' => true, 'readonly' => true, 'required' => true,
@@ -162,11 +164,11 @@ final class HtmlElement implements Stringable
 
     /**
      * Create element from flexible arguments
-     * 
+     *
      * @param string $tag HTML tag name
      * @param mixed ...$args Attributes (named) and children (data key or positional)
      * @return self
-     * 
+     *
      * @example
      * div_(class: 'container', data: [h1_('Title')])
      * a_(href: '/home', 'Click me')
@@ -175,7 +177,7 @@ final class HtmlElement implements Stringable
     {
         $attributes = [];
         $children = [];
-        
+
         foreach ($args as $key => $value) {
             if (is_int($key)) {
                 // Positional argument = child content
@@ -188,13 +190,13 @@ final class HtmlElement implements Stringable
                 $attributes[$key] = $value;
             }
         }
-        
+
         return new self($tag, $attributes, $children);
     }
 
     /**
      * Add child elements (immutable - returns new instance)
-     * 
+     *
      * @param mixed ...$children
      * @return self
      */
@@ -204,7 +206,7 @@ final class HtmlElement implements Stringable
         foreach ($children as $child) {
             $normalized = array_merge($normalized, self::normalizeChildren($child));
         }
-        
+
         return new self(
             $this->tag,
             $this->attributes,
@@ -214,7 +216,7 @@ final class HtmlElement implements Stringable
 
     /**
      * Add or update attributes (immutable - returns new instance)
-     * 
+     *
      * @param array<string, mixed> $attributes
      * @return self
      */
@@ -229,7 +231,7 @@ final class HtmlElement implements Stringable
 
     /**
      * Render to HTML string with caching
-     * 
+     *
      * @return string
      */
     public function render(): string
@@ -240,15 +242,15 @@ final class HtmlElement implements Stringable
 
         $html = '<' . $this->tag;
         $html .= $this->renderAttributes();
-        
+
         if ($this->isVoidElement()) {
             return $this->cachedRender = $html . '>';
         }
-        
+
         $html .= '>';
         $html .= $this->renderChildren();
         $html .= '</' . $this->tag . '>';
-        
+
         return $this->cachedRender = $html;
     }
 
@@ -259,21 +261,21 @@ final class HtmlElement implements Stringable
 
     /**
      * Stream render for large documents (no caching)
-     * 
+     *
      * @return \Generator<string>
      */
     public function stream(): \Generator
     {
         yield '<' . $this->tag;
         yield $this->renderAttributes();
-        
+
         if ($this->isVoidElement()) {
             yield '>';
             return;
         }
-        
+
         yield '>';
-        
+
         foreach ($this->children as $child) {
             if ($child instanceof self) {
                 yield from $child->stream();
@@ -281,7 +283,7 @@ final class HtmlElement implements Stringable
                 yield $child;
             }
         }
-        
+
         yield '</' . $this->tag . '>';
     }
 
@@ -321,7 +323,7 @@ final class HtmlElement implements Stringable
 
     /**
      * Render attributes with proper escaping and validation
-     * 
+     *
      * @return string
      */
     private function renderAttributes(): string
@@ -329,15 +331,15 @@ final class HtmlElement implements Stringable
         if (empty($this->attributes)) {
             return '';
         }
-        
+
         $parts = [];
-        
+
         foreach ($this->attributes as $name => $value) {
             // Skip null/false values
             if ($value === null || $value === false) {
                 continue;
             }
-            
+
             // Boolean attributes
             if (isset(self::BOOLEAN_ATTRS[$name])) {
                 if ($value) {
@@ -345,7 +347,7 @@ final class HtmlElement implements Stringable
                 }
                 continue;
             }
-            
+
             // Style array to string
             if ($name === 'style' && is_array($value)) {
                 $value = $this->renderStyleArray($value);
@@ -353,48 +355,48 @@ final class HtmlElement implements Stringable
                     continue;
                 }
             }
-            
+
             // Class array to string
             if ($name === 'class' && is_array($value)) {
-                $value = implode(' ', array_filter($value, fn($v) => $v !== ''));
+                $value = implode(' ', array_filter($value, fn ($v) => $v !== ''));
                 if ($value === '') {
                     continue;
                 }
             }
-            
+
             // URL validation for security-sensitive attributes
             if (in_array($name, ['href', 'src', 'action', 'formaction'], true)) {
                 $this->validateUrl((string) $value);
             }
-            
+
             $escaped = htmlspecialchars(
                 (string) $value,
                 ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE,
                 'UTF-8'
             );
-            
+
             $parts[] = sprintf('%s="%s"', $name, $escaped);
         }
-        
+
         return empty($parts) ? '' : ' ' . implode(' ', $parts);
     }
 
     /**
      * Render child elements
-     * 
+     *
      * @return string
      */
     private function renderChildren(): string
     {
         return implode('', array_map(
-            fn($child) => $child instanceof self ? $child->render() : $child,
+            fn ($child) => $child instanceof self ? $child->render() : $child,
             $this->children
         ));
     }
 
     /**
      * Render style array to CSS string
-     * 
+     *
      * @param array<string, mixed> $styles
      * @return string
      */
@@ -415,7 +417,7 @@ final class HtmlElement implements Stringable
 
     /**
      * Check if element is void (self-closing)
-     * 
+     *
      * @return bool
      */
     private function isVoidElement(): bool
@@ -425,7 +427,7 @@ final class HtmlElement implements Stringable
 
     /**
      * Escape text content securely
-     * 
+     *
      * @param string $text
      * @return string
      */
@@ -440,7 +442,7 @@ final class HtmlElement implements Stringable
 
     /**
      * Validate tag name
-     * 
+     *
      * @param string $tag
      * @throws InvalidArgumentException
      */
@@ -453,7 +455,7 @@ final class HtmlElement implements Stringable
 
     /**
      * Validate attributes for common security issues
-     * 
+     *
      * @param array<string, mixed> $attributes
      * @throws InvalidArgumentException
      */
@@ -464,7 +466,7 @@ final class HtmlElement implements Stringable
             if (!preg_match('/^[a-z][a-z0-9_:-]*$/i', (string) $name)) {
                 throw new InvalidArgumentException("Invalid attribute name: {$name}");
             }
-            
+
             // Block on* event handlers (use proper event listeners instead)
             if (str_starts_with(strtolower($name), 'on')) {
                 throw new InvalidArgumentException(
@@ -476,14 +478,14 @@ final class HtmlElement implements Stringable
 
     /**
      * Validate URL for dangerous protocols
-     * 
+     *
      * @param string $url
      * @throws InvalidArgumentException
      */
     private function validateUrl(string $url): void
     {
         $url = strtolower(trim($url));
-        
+
         foreach (self::DANGEROUS_PROTOCOLS as $protocol => $_) {
             if (str_starts_with($url, $protocol)) {
                 throw new InvalidArgumentException(
@@ -501,14 +503,14 @@ trait Component
 {
     /**
      * Render the component
-     * 
+     *
      * @return HtmlElement
      */
     abstract public function render(): HtmlElement;
 
     /**
      * Convert to string
-     * 
+     *
      * @return string
      */
     public function __toString(): string
@@ -523,7 +525,7 @@ trait Component
 
 /**
  * Create raw HTML (use with caution)
- * 
+ *
  * @param string $html
  * @return RawHtml
  */
@@ -534,7 +536,7 @@ function raw_html(string $html): RawHtml
 
 /**
  * Generic tag creator
- * 
+ *
  * @param string $tag
  * @param mixed ...$args
  * @return HtmlElement
@@ -546,7 +548,7 @@ function _tag(string $tag, mixed ...$args): HtmlElement
 
 /**
  * Create HTML document with proper DOCTYPE
- * 
+ *
  * @param HtmlElement $html
  * @return string
  */
@@ -557,7 +559,7 @@ function document(HtmlElement $html): string
 
 /**
  * Fragment wrapper (no tag, just children)
- * 
+ *
  * @param mixed ...$children
  * @return string
  */
@@ -1174,13 +1176,14 @@ function template_(mixed ...$args): HtmlElement
  * is automatically injected, allowing dynamic access to all helpers without
  * importing them individually.
  *
- * @param callable(): (HtmlElement|RawHtml|string|null) $callback Callback that returns renderable output.
+ * @param HtmlElement|RawHtml|callable|null $data Direct content or a compatibility callback.
+ * @param string $class Built-in rendering mode; HTML is the default.
  * @return string
  */
-function Sublime(HtmlElement|RawHtml|callable|null $data, string $uclass = 'html'): string
+function Sublime(HtmlElement|RawHtml|callable|null $data, string $class = 'html'): string
 {
-    if ($uclass !== 'html') {
-        throw new InvalidArgumentException("Unknown Sublime mode: {$uclass}");
+    if ($class !== 'html') {
+        throw new InvalidArgumentException("Unknown Sublime mode: {$class}");
     }
 
     $factory = new TagFactory();

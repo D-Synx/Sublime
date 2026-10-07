@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sublime\Tests;
 
 use PHPUnit\Framework\TestCase;
+
 use function Sublime\div_;
 
 final class HtmlEscapingTest extends TestCase
@@ -20,6 +21,7 @@ final class HtmlEscapingTest extends TestCase
     {
         $html = div_("Tom & Jerry's <Adventure>")->render();
 
-        self::assertSame('<div>Tom &amp; Jerry&#039;s &lt;Adventure&gt;</div>', $html);
+        self::assertSame('<div>Tom &amp; Jerry&apos;s &lt;Adventure&gt;</div>', $html);
     }
 }
+

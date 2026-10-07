@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sublime\Tests;
 
 use PHPUnit\Framework\TestCase;
+
 use function Sublime\{div_, raw_html};
 
 final class RawHtmlTest extends TestCase
@@ -16,3 +17,4 @@ final class RawHtmlTest extends TestCase
         self::assertSame('<div><span>Safe & sound</span></div>', $html);
     }
 }
+
