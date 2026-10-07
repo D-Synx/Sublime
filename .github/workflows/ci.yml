@@ -26,6 +26,11 @@ jobs:
         run: composer install --no-interaction --prefer-dist
       - name: Tests
         run: composer test
+      - name: Package validation
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          composer validate --strict
+          composer dump-autoload --optimize --strict-psr
       - name: Coding standards
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: composer cs
