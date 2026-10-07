@@ -182,13 +182,11 @@ final class TagFactory
  * Immutable HTML Element Builder
  *
  * Features:
- * - XSS protection with automatic escaping
+ * - Automatic escaping of text and attribute values
  * - Type-safe API with named parameters
  * - Performance optimized with render caching
  * - Supports all HTML5 elements and attributes
  * - CSP-friendly with nonce support
- *
- * @psalm-immutable
  */
 final class HtmlElement implements Stringable
 {
@@ -245,6 +243,9 @@ final class HtmlElement implements Stringable
             }
         }
         $this->children = $normalized;
+        if ($this->isVoidElement() && $normalized !== []) {
+            throw new InvalidArgumentException("Void element {$tag} cannot contain children.");
+        }
     }
 
     /**
