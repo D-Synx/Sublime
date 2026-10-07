@@ -140,6 +140,7 @@ final class ChildrenNormalizationTest extends TestCase
 
     public function testRecursiveIteratorIsRejected(): void
     {
+        /** @var ArrayObject<array-key, mixed> $children */
         $children = new ArrayObject();
         $children[] = $children;
         $this->expectException(InvalidArgumentException::class);

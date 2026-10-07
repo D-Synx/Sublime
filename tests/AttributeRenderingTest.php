@@ -32,6 +32,7 @@ final class AttributeRenderingTest extends TestCase
     }
 
     #[DataProvider('attributes')]
+    /** @param array<string, mixed> $attributes */
     public function testSupportedAttributes(array $attributes, string $expected): void
     {
         $element = div_(...$attributes);
@@ -73,6 +74,7 @@ final class AttributeRenderingTest extends TestCase
     }
 
     #[DataProvider('invalidAttributes')]
+    /** @param array<string, mixed> $attributes */
     public function testInvalidAttributesFailAtConstruction(array $attributes): void
     {
         $this->expectException(InvalidArgumentException::class);

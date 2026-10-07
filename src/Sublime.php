@@ -228,7 +228,7 @@ final class HtmlElement implements Stringable
     private readonly array $attributes;
 
     /**
-     * @param array<string, mixed> $attributes
+     * @param array<array-key, mixed> $attributes
      * @param array<mixed> $children
      */
     public function __construct(
@@ -396,7 +396,7 @@ final class HtmlElement implements Stringable
             $parts[] = sprintf('%s="%s"', $name, $escaped);
         }
 
-        return empty($parts) ? '' : ' ' . implode(' ', $parts);
+        return ' ' . implode(' ', $parts);
     }
 
     /**
@@ -462,7 +462,7 @@ final class HtmlElement implements Stringable
     /**
      * Validate and capture attribute values once.
      *
-     * @param array<string, mixed> $attributes
+     * @param array<array-key, mixed> $attributes
      * @return array<string, string|true>
      * @throws InvalidArgumentException
      */
