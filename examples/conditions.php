@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use function Sublime\{Sublime, body_, div_, h1_, p_, ul_, li_};
+use function Sublime\{Sublime, body_, div_, h1_, li_, p_, ul_};
 
 $user = 'guest';
+$notifications = ['Nouveauté & simplicité', 'Documentation mise à jour'];
+$items = [];
 
-$notifications = ['New feature shipped', 'Docs updated'];
+foreach ($notifications as $notification) {
+    $items[] = li_($notification);
+}
 
-echo Sublime(fn () => body_(data: [
-    div_(class: 'page', data: [
-        h1_($user === 'admin' ? 'Welcome back, admin' : 'Welcome back'),
-        $notifications !== []
-            ? ul_(data: array_map(fn (string $note) => li_($note), $notifications))
-            : p_('Nothing new today.')
-    ])
-]));
+echo Sublime(
+    class: 'html',
+    data: body_(data: div_(class: 'page', data: [
+        h1_($user === 'admin' ? 'Bienvenue, admin' : 'Bienvenue'),
+        $items !== [] ? ul_(data: $items) : p_('Rien de nouveau.'),
+    ]))
+);

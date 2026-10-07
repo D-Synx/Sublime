@@ -25,24 +25,6 @@ function namedZeroCallback(): HtmlElement
     return p_('Hello');
 }
 
-final class CallbackFixture
-{
-    public static function render(TagFactory $tags): HtmlElement
-    {
-        return $tags->p('Hello');
-    }
-
-    public function instanceRender(TagFactory $tags): HtmlElement
-    {
-        return $tags->p('Hello');
-    }
-
-    public function __invoke(TagFactory $tags): HtmlElement
-    {
-        return $tags->p('Hello');
-    }
-}
-
 final class SublimeCallbackTest extends TestCase
 {
     /** @return iterable<string, array{callable}> */
@@ -90,6 +72,7 @@ final class SublimeCallbackTest extends TestCase
             'union' => function (TagFactory|string $tags) use ($record): void { $record(); },
             'variadic' => function (...$tags) use ($record): void { $record(); },
             'reference' => function (&$tags) use ($record): void { $record(); },
+            default => throw new \LogicException('Unknown callback test signature.'),
         };
         try {
             Sublime($callback);

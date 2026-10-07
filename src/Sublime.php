@@ -12,20 +12,6 @@ use Stringable;
 use Traversable;
 
 /**
- * Sublime HTML Builder
- *
- * A modern, type-safe, and secure HTML builder for PHP 8.1+
- *
- * @package   Sublime
- * @version   0.1.0
- * @author    DarkSynx
- * @license   MIT
- * @link      https://github.com/DarkSynx/Sublime
- *
- * @psalm-immutable
- */
-
-/**
  * Represents raw HTML content that should not be escaped
  *
  * @psalm-immutable
@@ -117,7 +103,7 @@ final class ChildValues
  * Fluent factory that exposes every HTML element helper as a dynamic method.
  *
  * The factory is automatically injected into {@see Sublime()} callbacks that
- * declare at least one parameter, which allows importing just the main
+ * declare exactly one untyped or TagFactory-typed parameter, which allows importing just the main
  * rendering function while still having access to all helpers via
  * `$tags->div(...)`, `$tags->body(...)`, etc.
  *
@@ -414,8 +400,7 @@ final class TagFactory
  * - Automatic escaping of text and attribute values
  * - Type-safe API with named parameters
  * - Performance optimized with render caching
- * - Supports all HTML5 elements and attributes
- * - CSP-friendly with nonce support
+ * - Standard and custom tag composition
  */
 final class HtmlElement implements Stringable
 {
@@ -486,7 +471,7 @@ final class HtmlElement implements Stringable
      *
      * @example
      * div_(class: 'container', data: [h1_('Title')])
-     * a_(href: '/home', 'Click me')
+     * a_(href: '/home', data: 'Click me')
      */
     public static function create(string $tag, mixed ...$args): self
     {
@@ -1465,9 +1450,9 @@ function template_(mixed ...$args): HtmlElement
 /**
  * Main rendering function.
  *
- * If the callback declares at least one parameter, a {@see TagFactory} instance
- * is automatically injected, allowing dynamic access to all helpers without
- * importing them individually.
+ * Render a prebuilt element without a callback. HTML is the default mode.
+ * Positional callbacks are retained for compatibility; validated one-parameter
+ * callbacks receive a {@see TagFactory} instance.
  *
  * @param HtmlElement|RawHtml|callable|null $data Direct content or a compatibility callback.
  * @param string $class Built-in rendering mode; HTML is the default.

@@ -6,3 +6,6 @@ parameters:
     paths:
         - src
         - tests
+        - examples
+        - index.php
+

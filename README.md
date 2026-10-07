@@ -1,20 +1,10 @@
-# Sublime PHP
+# Sublime
 
-Functional & immutable HTML builder for PHP 8.1+.
+**Du HTML simple, écrit en PHP.**
 
-[![CI](https://github.com/D-Synx/Sublime/actions/workflows/ci.yml/badge.svg)](https://github.com/D-Synx/Sublime/actions/workflows/ci.yml)
-![Packagist version](https://img.shields.io/badge/packagist-coming%20soon-lightgrey)
-![License](https://img.shields.io/github/license/D-Synx/Sublime)
+Un petit constructeur HTML : composez vos balises, passez votre contenu à `Sublime`, récupérez une chaîne HTML. Pas de moteur de templates à apprendre, aucune dépendance à l’exécution.
 
-## Installation
-
-Install the library via [Composer](https://getcomposer.org/):
-
-```bash
-composer require darksynx/sublime
-```
-
-Once installed, everything is auto-loaded through Composer:
+**Version 1.0 en préparation · PHP ≥ 8.3 · licence MIT**
 
 ```php
 <?php
@@ -25,167 +15,200 @@ require __DIR__ . '/vendor/autoload.php';
 
 use function Sublime\{Sublime, body_, div_, p_};
 
-echo Sublime(fn () => body_(data: [
-    div_(class: 'app', data: [
-        p_('Hello, Sublime!')
-    ])
-]));
-```
-
-## Basic usage
-
-Sublime exposes a `Sublime(fn () => ...)` entry point. Inside the callback you compose HTML using the underscore tag helpers (`body_()`, `div_()`, `p_()`, ...). All children are normalized, arrays are flattened, and scalar values are escaped by default.
-
-```php
-use function Sublime\{Sublime, body_, div_, h1_, p_};
-
-echo Sublime(fn () => body_(data: [
-    div_(class: 'container', data: [
-        h1_('Welcome 👋'),
-        p_('Build HTML with pure PHP, no templates required.'),
-    ]),
-]));
-```
-
-Output:
-
-```html
-<body>
-    <div class="container">
-        <h1>Welcome 👋</h1>
-        <p>Build HTML with pure PHP, no templates required.</p>
-    </div>
-</body>
-```
-
-### "One shot" include (no `use function` imports)
-
-If you are prototyping or want the smallest possible bootstrap file, you can
-simply include the generated helper file and call `Sublime()` directly without
-adding `use function ...` statements. This is convenient when sharing
-copy/pasteable examples with newcomers.
-
-```php
-<?php
-
-namespace Sublime;
-
-include __DIR__ . '/sublime.php';
-
-$user = 'admin';
-
-echo Sublime(fn () =>
-    body_([
-        link_(rel: 'stylesheet', href: 'style.css'),
-        div_(class: 'container', data: [
-            header_([
-                h1_('Mon Super Site'),
-                nav_([
-                    a_(href: '/', data: 'Accueil'),
-                    a_(href: '/about', data: 'À propos'),
-                    $user !== 'admin' ? ruby_(' 漢 6565') : ' => admin',
-                    div_(
-                        class: 'article',
-                        data: raw_html('<z>test de texte</z>')
-                    ),
-                ]),
-            ]),
-        ]),
-    ])
-);
-```
-
-Composer remains the recommended installation method, but the helper file is
-100% standalone, so you can tailor the ergonomics to your preferred “one shot”
-style.
-
-## Factory-assisted usage (no helper imports)
-
-If you prefer importing only the main `Sublime()` function, declare a parameter in
-the callback. Sublime will automatically inject a `TagFactory` instance that
-exposes every helper dynamically:
-
-```php
-use function Sublime\Sublime;
-
-echo Sublime(fn (\Sublime\TagFactory $tags) => $tags->body(
-    data: [
-        $tags->div(
-            class: 'container',
-            data: [
-                $tags->p('Factory-powered rendering!'),
-            ],
-        ),
-    ],
+echo Sublime(body_(
+    data: div_(class: 'app', data: p_('Hello'))
 ));
 ```
 
-The factory also exposes `$tags->tag('my-element', ...)`, `$tags->raw('<b>..</b>')`,
-and `$tags->fragment(...)` helpers for custom elements and raw output.
+Résultat exact :
 
-## Components and composition
-
-Everything is just PHP, so you can create reusable components by returning `HtmlElement` instances from plain functions.
-
-```php
-use Sublime\HtmlElement;
-use function Sublime\{div_, nav_, a_, main_, footer_, small_, Sublime, body_};
-
-function navbar(): HtmlElement
-{
-    return nav_(data: [
-        a_(href: '/', data: 'Home'),
-        a_(href: '/docs', data: 'Docs'),
-        a_(href: '/github', data: 'GitHub'),
-    ]);
-}
-
-function layout(HtmlElement $content): HtmlElement
-{
-    return body_(data: [
-        navbar(),
-        main_(data: $content),
-        footer_(data: small_('© ' . date('Y')))
-    ]);
-}
-
-echo Sublime(fn () => layout(div_('Hello from a component!')));
+```html
+<body><div class="app"><p>Hello</p></div></body>
 ```
 
-## Escaping and `RawHtml`
+## Un enfant, une expression
 
-* Every string child and attribute is HTML-escaped automatically (`&`, `<`, `>`, quotes, etc.).
-* Nested arrays, `null`, and `false` values are removed when normalizing children.
-* When you really need to inject trusted markup, wrap it in `raw_html('<span>Trusted</span>')`. **Do not** use `RawHtml` for user-generated content, otherwise you may introduce XSS vulnerabilities.
+Un seul enfant s’écrit directement. Plusieurs enfants s’écrivent dans un tableau ; leur ordre est conservé.
+
+```php
+echo Sublime(div_(class: 'app', data: p_('Hello')));
+
+echo Sublime(div_(class: 'app', data: [
+    p_('One'),
+    p_('Two'),
+]));
+```
+
+Les arguments positionnels sont aussi du contenu : `p_('Hello')`, `div_('Hello', p_('World'))`. L’argument `data:` désigne le contenu ; un attribut HTML de données s’écrit par exemple `...['data-id' => 42]`.
+
+## Le mode HTML
+
+HTML est le mode par défaut. Pour l’expliciter :
+
+```php
+echo Sublime(
+    class: 'html',
+    data: body_(data: div_(class: 'app', data: p_('Hello')))
+);
+```
+
+`class: 'html'` sélectionne le mode de rendu de Sublime ; `div_(class: 'app')` définit une classe CSS. Chaque argument appartient à son propre appel.
+
+Ces deux formes ne demandent ni `fn`, ni `callback:`, ni instance de `TagFactory`. En 1.0, seul le mode `'html'` existe ; les autres noms sont rejetés. Sublime crée sa fabrique en interne. PHP évalue d’abord les appels aux helpers, puis Sublime rend l’arbre construit.
+
+PHP impose de placer les arguments positionnels avant les arguments nommés. Utilisez `Sublime(body_(...), class: 'html')` ou la forme entièrement nommée ci-dessus. Le contenu est obligatoire.
+
+## Installation de cette version
+
+Cette branche prépare 1.0 ; aucune publication Packagist ou étiquette 1.0.0 n’est annoncée ici. Pour essayer le projet et lancer ses tests, avec PHP ≥ 8.3 et Composer :
+
+```bash
+git clone https://github.com/D-Synx/Sublime.git
+cd Sublime
+git checkout codex/sublime-1.0-foundation
+composer install
+php examples/basic.php
+```
+
+`vendor/autoload.php` charge les classes **et** les fonctions. Aucun deuxième include n’est nécessaire. Le fichier `src/Sublime.php` peut aussi être chargé seul pour un prototype.
+
+## Valeurs du contenu
+
+Les mêmes règles s’appliquent à `data:`, aux enfants positionnels, à `fragment()` et au résultat d’un callback de compatibilité.
+
+| Valeur | Rendu |
+|---|---|
+| `HtmlElement` | Élément HTML imbriqué |
+| `RawHtml` | HTML fourni tel quel |
+| `string`, `int`, `float` | Texte échappé |
+| `Stringable` | Conversion en texte une seule fois, puis échappement |
+| `null`, `false` | Rien |
+| `true` | `1` |
+| Tableau ou `Traversable` fini | Enfants aplatis dans l’ordre, clés ignorées |
+| Autre objet, ressource, closure comme enfant | `InvalidArgumentException` |
+
+Les itérateurs sont consommés à la construction. La limite est de 128 conteneurs imbriqués ; les cycles et dépassements sont rejetés. Fournissez uniquement des itérateurs finis.
+
+`Sublime()` accepte directement un `HtmlElement`, un `RawHtml` ou `null`. Pour rendre du texte ou plusieurs éléments sans balise englobante, utilisez `fragment(...)`.
+
+## Attributs lisibles
+
+```php
+use function Sublime\{div_, input_};
+
+echo div_(
+    ...['aria-hidden' => false, 'data-ready' => true],
+    class: ['app' => true, 'active' => true, 'hidden' => false],
+    style: ['color' => 'red', 'margin-top' => 0],
+    data: 'Hello'
+);
+// <div aria-hidden="false" data-ready="true" class="app active" style="color:red;margin-top:0">Hello</div>
+
+echo input_(disabled: true, required: false);
+// <input disabled>
+```
+
+| Attribut | Valeurs acceptées |
+|---|---|
+| Ordinaire | `string`, `int`, `float`, `Stringable` ; `null`/`false` omettent l’attribut |
+| Booléen HTML reconnu | `true` produit le nom seul ; `false`/`null` l’omettent ; autres valeurs rejetées |
+| `aria-*`, `data-*` | Règles ordinaires, plus booléens rendus `"true"`/`"false"` |
+| `class` | Chaîne, liste de chaînes, ou tableau associatif `nom => bool` |
+| `style` | Chaîne ou tableau associatif `propriété => string|int|float` ; `null`/`false`/`''` omis dans ce tableau |
+
+Les noms de classe vides sont omis dans les tableaux. Les tableaux mixtes de classes et les structures imbriquées de classes/styles sont rejetés. Les attributs ordinaires n’acceptent pas de tableaux, d’objets non `Stringable` ou de `true`. Les noms d’attributs sont normalisés en minuscules. Les valeurs `Stringable` sont figées à la construction.
+
+Booléens reconnus : `disabled`, `readonly`, `required`, `checked`, `selected`, `multiple`, `autofocus`, `autoplay`, `controls`, `loop`, `muted`, `open`, `reversed`, `novalidate`, `formnovalidate`, `async`, `defer`, `ismap`, `itemscope`, `allowfullscreen`, `inert`, `nomodule`, `playsinline`, `default`. Un attribut énuméré tel que `hidden` ou `contenteditable` se passe avec une chaîne, pas un booléen.
+
+## Échappement et limites de sécurité
+
+Le texte et les valeurs d’attributs sont échappés en UTF-8 avec `ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE`. Les octets UTF-8 invalides sont remplacés ; une apostrophe devient `&apos;`. Passez du texte brut : les entités déjà encodées sont à nouveau échappées.
+
+Les noms invalides et les attributs `on*` sont rejetés. Les enfants des balises vides, comme `img` et `input`, sont rejetés au lieu d’être perdus.
+
+Sur `href`, `src`, `action` et `formaction`, Sublime rejette les préfixes `javascript:`, `vbscript:` et `data:text/html` sans tenir compte de la casse et des espaces/contrôles ASCII. Cela reste une vérification ciblée, pas une liste de destinations autorisées.
+
+`raw_html()` est une échappatoire pour du **HTML de confiance**. Les valeurs CSS, le contenu de `script`/`style` et les attributs qui interprètent du HTML comme `srcdoc` demandent leur propre politique de confiance. Sublime n’est pas un assainisseur HTML/CSS, ni un encodeur JavaScript, ni un validateur de conformité du document.
 
 ```php
 use function Sublime\{div_, raw_html};
 
-div_(data: [
-    'Safe: ',
-    raw_html('<strong>Trusted markup</strong>'),
+echo div_(data: [
+    '<Texte échappé>',
+    raw_html('<strong>HTML de confiance</strong>'),
 ]);
 ```
 
-## Examples
+## Composer des composants
 
-Run the bundled examples with:
+Un composant peut simplement être une fonction qui retourne un `HtmlElement` :
 
-```bash
-php -S localhost:8000 -t examples
+```php
+use Sublime\HtmlElement;
+use function Sublime\{Sublime, section_, h2_, p_};
+
+function card(string $title, string $text): HtmlElement
+{
+    return section_(class: 'card', data: [
+        h2_($title),
+        p_($text),
+    ]);
+}
+
+echo Sublime(card('Simple', 'Un seul enfant sans tableau.'));
 ```
 
-* `examples/basic.php` – minimal “Hello world” rendering.
-* `examples/components.php` – layout + reusable components.
-* `examples/conditions.php` – conditional rendering in callbacks.
+Le trait facultatif `Component` fournit `__toString()` à une classe implémentant `render(): HtmlElement`. Pour imbriquer sa structure HTML, passez `$component->render()` ; l’objet lui-même est traité comme du texte `Stringable` et échappé.
 
-## Limitations & roadmap
+## Rendu et copies
 
-* No template inheritance – compose everything with PHP functions.
-* No client-side hydration helpers yet.
-* Limited to standard HTML tag helpers (custom elements are supported by calling `_tag('my-element', ...)`).
-* Future roadmap: better documentation, Packagist release, and extra developer tooling.
+- `$element->render()` et `(string) $element` retournent le HTML ; le résultat est mis en cache.
+- `$element->stream()` fournit les morceaux du même HTML, sans cache de sortie. Il ne rend pas la collecte des enfants paresseuse.
+- `fragment(...)` rend du contenu sans balise supplémentaire.
+- `document(html_(...))` ajoute `<!DOCTYPE html>` suivi d’un saut de ligne.
+- `withChildren(...)` ajoute des enfants sur une nouvelle instance.
+- `withAttributes([...])` ajoute/remplace des attributs sur une nouvelle instance ; `null` retire un attribut. L’original reste inchangé.
 
-## License
+## Fabrique explicite et compatibilité
 
-Released under the [MIT License](LICENSE).
+Pour un usage dynamique, `TagFactory` reste disponible :
+
+```php
+use Sublime\TagFactory;
+use function Sublime\Sublime;
+
+$tags = new TagFactory();
+echo Sublime($tags->body(
+    data: $tags->div(class: 'app', data: $tags->p('Hello'))
+));
+```
+
+Ses méthodes `p()` et `p_()` correspondent au helper `p_()`. `$tags->tag('my-card', ...)` et `_tag('my-card', ...)` créent des balises personnalisées ; `raw()`, `fragment()` et `document()` sont aussi disponibles.
+
+Les anciens appels `Sublime($callback)` sont conservés. Un callback déclare zéro paramètre ou un paramètre non typé/`TagFactory` (nullable admis), auquel Sublime fournit la fabrique. Les fonctions nommées, méthodes et objets invocables suivent la même règle. Les autres types, signatures variadiques, références et plusieurs paramètres sont rejetés avant invocation. Les exceptions du callback restent propagées.
+
+`sublime_($callback)` reste un alias historique déprécié. PHP ignore la casse des noms de fonction : `sublime()` et `Sublime()` désignent déjà la même fonction.
+
+## Tests et exemples
+
+```bash
+composer test
+composer cs
+composer stan
+composer validate --strict
+composer dump-autoload --optimize --strict-psr
+php examples/basic.php
+php examples/components.php
+php examples/conditions.php
+php index.php
+```
+
+La CI vérifie PHP 8.3, 8.4 et 8.5 : PHPUnit, PHPStan, règles de code et autoload Composer optimisé. Le démarrage rapide et les exemples sont exécutés par les tests. `composer cs-fix` applique les corrections de style.
+
+## Périmètre 1.0 et suite
+
+Cette version couvre la composition HTML côté serveur, les types documentés, l’échappement, les attributs, les composants PHP et les surfaces de rendu. Elle n’inclut ni routage, ni cache applicatif, ni hydratation, ni validation complète du standard HTML.
+
+Après 1.0 : publication Composer, puis étude de nouveaux modes et de meilleurs outils pour l’éditeur, en gardant cette syntaxe simple.
+
+[Contribuer](CONTRIBUTING.md) · [Sécurité](SECURITY.md) · [Changements](CHANGELOG.md) · [Licence MIT](LICENSE)

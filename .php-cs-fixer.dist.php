@@ -8,6 +8,8 @@ use PhpCsFixer\Finder;
 $finder = Finder::create()
     ->in(__DIR__ . '/src')
     ->in(__DIR__ . '/tests')
+    ->in(__DIR__ . '/examples')
+    ->append([__DIR__ . '/index.php'])
     ->name('*.php');
 
 return (new Config())
@@ -21,3 +23,4 @@ return (new Config())
         'single_quote' => true
     ])
     ->setFinder($finder);
+

@@ -7,9 +7,6 @@
         "php": ">=8.3"
     },
     "autoload": {
-        "psr-4": {
-            "Sublime\\": "src/"
-        },
         "files": [
             "src/Sublime.php"
         ]
@@ -30,7 +27,7 @@
         "test": "phpunit",
         "cs": "php-cs-fixer fix --dry-run --using-cache=no --diff",
         "cs-fix": "php-cs-fixer fix",
-        "stan": "phpstan analyse src tests"
+        "stan": "phpstan analyse"
     },
     "require-dev": {
         "phpunit/phpunit": "^12.5",

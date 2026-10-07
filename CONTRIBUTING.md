@@ -1,36 +1,30 @@
-# Contributing to Sublime
+# Contribuer à Sublime
 
-Thank you for taking the time to contribute! Please follow the steps below to keep the project healthy and consistent.
+PHP ≥ 8.3 et Composer sont nécessaires. Le périmètre 1.0 est un petit constructeur HTML, avec une syntaxe directe et des conversions prévisibles.
 
-## Getting started
-
-1. Fork and clone the repository:
-   ```bash
-   git clone https://github.com/DarkSynx/Sublime.git
-   cd Sublime
-   ```
-2. Install dependencies:
-   ```bash
-   composer install
-   ```
-
-## Development workflow
-
-Run the automated checks locally before opening a pull request:
+## Préparer le projet
 
 ```bash
-composer test    # PHPUnit
-composer cs      # Coding standards (dry-run)
-composer stan    # PHPStan static analysis
+git clone https://github.com/D-Synx/Sublime.git
+cd Sublime
+git checkout codex/sublime-1.0-foundation
+composer install
 ```
 
-Use `composer cs-fix` to automatically fix coding standards issues when possible.
+## Vérifier une modification
 
-## Pull request guidelines
+```bash
+composer test
+composer cs
+composer stan
+composer validate --strict
+composer dump-autoload --optimize --strict-psr
+```
 
-* Keep changes focused and include tests whenever you add or modify behavior.
-* Do not introduce breaking changes to the public API (the `Sublime()` entry point and `tag_()` helpers).
-* Ensure CI passes and update documentation or examples when relevant.
-* Describe the motivation and approach clearly in your pull request description.
+`composer cs-fix` applique le style. La CI vérifie PHP 8.3, 8.4 et 8.5 ; les tests exécutent le démarrage rapide du README et les exemples.
 
-Thank you for helping make Sublime better!
+Ajoutez un test de comportement pour une correction ou une nouvelle règle de conversion. Conservez la simplicité de `Sublime(body_(...))`, sans callback obligatoire. Documentez toute modification du contrat public et expliquez les éventuelles ruptures de compatibilité.
+
+## Proposer une contribution
+
+Travaillez sur une branche dédiée et ouvrez une pull request décrivant le problème, le comportement obtenu et les vérifications effectuées. Une fusion, un tag ou une publication restent des étapes distinctes de la préparation du code.
