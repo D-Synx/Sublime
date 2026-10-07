@@ -24,4 +24,3 @@ final class HtmlEscapingTest extends TestCase
         self::assertSame('<div>Tom &amp; Jerry&apos;s &lt;Adventure&gt;</div>', $html);
     }
 }
-

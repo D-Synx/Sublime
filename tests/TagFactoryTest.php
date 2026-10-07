@@ -43,4 +43,3 @@ final class TagFactoryTest extends TestCase
         self::assertSame('<main><p>Content</p></main>', $element->render());
     }
 }
-

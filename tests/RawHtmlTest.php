@@ -17,4 +17,3 @@ final class RawHtmlTest extends TestCase
         self::assertSame('<div><span>Safe & sound</span></div>', $html);
     }
 }
-
