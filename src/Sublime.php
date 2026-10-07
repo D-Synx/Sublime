@@ -7,7 +7,7 @@ namespace Sublime;
 use Closure;
 use InvalidArgumentException;
 use ReflectionFunction;
-use ReflectionMethod;
+use ReflectionNamedType;
 use Stringable;
 use Traversable;
 
@@ -120,6 +120,235 @@ final class ChildValues
  * declare at least one parameter, which allows importing just the main
  * rendering function while still having access to all helpers via
  * `$tags->div(...)`, `$tags->body(...)`, etc.
+ *
+ * @method HtmlElement html(mixed ...$args)
+ * @method HtmlElement html_(mixed ...$args)
+ * @method HtmlElement head(mixed ...$args)
+ * @method HtmlElement head_(mixed ...$args)
+ * @method HtmlElement body(mixed ...$args)
+ * @method HtmlElement body_(mixed ...$args)
+ * @method HtmlElement title(mixed ...$args)
+ * @method HtmlElement title_(mixed ...$args)
+ * @method HtmlElement meta(mixed ...$args)
+ * @method HtmlElement meta_(mixed ...$args)
+ * @method HtmlElement link(mixed ...$args)
+ * @method HtmlElement link_(mixed ...$args)
+ * @method HtmlElement style(mixed ...$args)
+ * @method HtmlElement style_(mixed ...$args)
+ * @method HtmlElement script(mixed ...$args)
+ * @method HtmlElement script_(mixed ...$args)
+ * @method HtmlElement header(mixed ...$args)
+ * @method HtmlElement header_(mixed ...$args)
+ * @method HtmlElement footer(mixed ...$args)
+ * @method HtmlElement footer_(mixed ...$args)
+ * @method HtmlElement main(mixed ...$args)
+ * @method HtmlElement main_(mixed ...$args)
+ * @method HtmlElement section(mixed ...$args)
+ * @method HtmlElement section_(mixed ...$args)
+ * @method HtmlElement article(mixed ...$args)
+ * @method HtmlElement article_(mixed ...$args)
+ * @method HtmlElement aside(mixed ...$args)
+ * @method HtmlElement aside_(mixed ...$args)
+ * @method HtmlElement nav(mixed ...$args)
+ * @method HtmlElement nav_(mixed ...$args)
+ * @method HtmlElement div(mixed ...$args)
+ * @method HtmlElement div_(mixed ...$args)
+ * @method HtmlElement span(mixed ...$args)
+ * @method HtmlElement span_(mixed ...$args)
+ * @method HtmlElement p(mixed ...$args)
+ * @method HtmlElement p_(mixed ...$args)
+ * @method HtmlElement h1(mixed ...$args)
+ * @method HtmlElement h1_(mixed ...$args)
+ * @method HtmlElement h2(mixed ...$args)
+ * @method HtmlElement h2_(mixed ...$args)
+ * @method HtmlElement h3(mixed ...$args)
+ * @method HtmlElement h3_(mixed ...$args)
+ * @method HtmlElement h4(mixed ...$args)
+ * @method HtmlElement h4_(mixed ...$args)
+ * @method HtmlElement h5(mixed ...$args)
+ * @method HtmlElement h5_(mixed ...$args)
+ * @method HtmlElement h6(mixed ...$args)
+ * @method HtmlElement h6_(mixed ...$args)
+ * @method HtmlElement blockquote(mixed ...$args)
+ * @method HtmlElement blockquote_(mixed ...$args)
+ * @method HtmlElement pre(mixed ...$args)
+ * @method HtmlElement pre_(mixed ...$args)
+ * @method HtmlElement a(mixed ...$args)
+ * @method HtmlElement a_(mixed ...$args)
+ * @method HtmlElement strong(mixed ...$args)
+ * @method HtmlElement strong_(mixed ...$args)
+ * @method HtmlElement em(mixed ...$args)
+ * @method HtmlElement em_(mixed ...$args)
+ * @method HtmlElement code(mixed ...$args)
+ * @method HtmlElement code_(mixed ...$args)
+ * @method HtmlElement small(mixed ...$args)
+ * @method HtmlElement small_(mixed ...$args)
+ * @method HtmlElement mark(mixed ...$args)
+ * @method HtmlElement mark_(mixed ...$args)
+ * @method HtmlElement del(mixed ...$args)
+ * @method HtmlElement del_(mixed ...$args)
+ * @method HtmlElement ins(mixed ...$args)
+ * @method HtmlElement ins_(mixed ...$args)
+ * @method HtmlElement sub(mixed ...$args)
+ * @method HtmlElement sub_(mixed ...$args)
+ * @method HtmlElement sup(mixed ...$args)
+ * @method HtmlElement sup_(mixed ...$args)
+ * @method HtmlElement ruby(mixed ...$args)
+ * @method HtmlElement ruby_(mixed ...$args)
+ * @method HtmlElement ul(mixed ...$args)
+ * @method HtmlElement ul_(mixed ...$args)
+ * @method HtmlElement ol(mixed ...$args)
+ * @method HtmlElement ol_(mixed ...$args)
+ * @method HtmlElement li(mixed ...$args)
+ * @method HtmlElement li_(mixed ...$args)
+ * @method HtmlElement dl(mixed ...$args)
+ * @method HtmlElement dl_(mixed ...$args)
+ * @method HtmlElement dt(mixed ...$args)
+ * @method HtmlElement dt_(mixed ...$args)
+ * @method HtmlElement dd(mixed ...$args)
+ * @method HtmlElement dd_(mixed ...$args)
+ * @method HtmlElement img(mixed ...$args)
+ * @method HtmlElement img_(mixed ...$args)
+ * @method HtmlElement video(mixed ...$args)
+ * @method HtmlElement video_(mixed ...$args)
+ * @method HtmlElement audio(mixed ...$args)
+ * @method HtmlElement audio_(mixed ...$args)
+ * @method HtmlElement source(mixed ...$args)
+ * @method HtmlElement source_(mixed ...$args)
+ * @method HtmlElement picture(mixed ...$args)
+ * @method HtmlElement picture_(mixed ...$args)
+ * @method HtmlElement canvas(mixed ...$args)
+ * @method HtmlElement canvas_(mixed ...$args)
+ * @method HtmlElement svg(mixed ...$args)
+ * @method HtmlElement svg_(mixed ...$args)
+ * @method HtmlElement form(mixed ...$args)
+ * @method HtmlElement form_(mixed ...$args)
+ * @method HtmlElement input(mixed ...$args)
+ * @method HtmlElement input_(mixed ...$args)
+ * @method HtmlElement button(mixed ...$args)
+ * @method HtmlElement button_(mixed ...$args)
+ * @method HtmlElement select(mixed ...$args)
+ * @method HtmlElement select_(mixed ...$args)
+ * @method HtmlElement option(mixed ...$args)
+ * @method HtmlElement option_(mixed ...$args)
+ * @method HtmlElement textarea(mixed ...$args)
+ * @method HtmlElement textarea_(mixed ...$args)
+ * @method HtmlElement label(mixed ...$args)
+ * @method HtmlElement label_(mixed ...$args)
+ * @method HtmlElement fieldset(mixed ...$args)
+ * @method HtmlElement fieldset_(mixed ...$args)
+ * @method HtmlElement legend(mixed ...$args)
+ * @method HtmlElement legend_(mixed ...$args)
+ * @method HtmlElement table(mixed ...$args)
+ * @method HtmlElement table_(mixed ...$args)
+ * @method HtmlElement thead(mixed ...$args)
+ * @method HtmlElement thead_(mixed ...$args)
+ * @method HtmlElement tbody(mixed ...$args)
+ * @method HtmlElement tbody_(mixed ...$args)
+ * @method HtmlElement tfoot(mixed ...$args)
+ * @method HtmlElement tfoot_(mixed ...$args)
+ * @method HtmlElement tr(mixed ...$args)
+ * @method HtmlElement tr_(mixed ...$args)
+ * @method HtmlElement th(mixed ...$args)
+ * @method HtmlElement th_(mixed ...$args)
+ * @method HtmlElement td(mixed ...$args)
+ * @method HtmlElement td_(mixed ...$args)
+ * @method HtmlElement caption(mixed ...$args)
+ * @method HtmlElement caption_(mixed ...$args)
+ * @method HtmlElement col(mixed ...$args)
+ * @method HtmlElement col_(mixed ...$args)
+ * @method HtmlElement colgroup(mixed ...$args)
+ * @method HtmlElement colgroup_(mixed ...$args)
+ * @method HtmlElement details(mixed ...$args)
+ * @method HtmlElement details_(mixed ...$args)
+ * @method HtmlElement summary(mixed ...$args)
+ * @method HtmlElement summary_(mixed ...$args)
+ * @method HtmlElement dialog(mixed ...$args)
+ * @method HtmlElement dialog_(mixed ...$args)
+ * @method HtmlElement br(mixed ...$args)
+ * @method HtmlElement br_(mixed ...$args)
+ * @method HtmlElement hr(mixed ...$args)
+ * @method HtmlElement hr_(mixed ...$args)
+ * @method HtmlElement iframe(mixed ...$args)
+ * @method HtmlElement iframe_(mixed ...$args)
+ * @method HtmlElement figure(mixed ...$args)
+ * @method HtmlElement figure_(mixed ...$args)
+ * @method HtmlElement figcaption(mixed ...$args)
+ * @method HtmlElement figcaption_(mixed ...$args)
+ * @method HtmlElement base(mixed ...$args)
+ * @method HtmlElement base_(mixed ...$args)
+ * @method HtmlElement address(mixed ...$args)
+ * @method HtmlElement address_(mixed ...$args)
+ * @method HtmlElement hgroup(mixed ...$args)
+ * @method HtmlElement hgroup_(mixed ...$args)
+ * @method HtmlElement search(mixed ...$args)
+ * @method HtmlElement search_(mixed ...$args)
+ * @method HtmlElement menu(mixed ...$args)
+ * @method HtmlElement menu_(mixed ...$args)
+ * @method HtmlElement abbr(mixed ...$args)
+ * @method HtmlElement abbr_(mixed ...$args)
+ * @method HtmlElement b(mixed ...$args)
+ * @method HtmlElement b_(mixed ...$args)
+ * @method HtmlElement bdi(mixed ...$args)
+ * @method HtmlElement bdi_(mixed ...$args)
+ * @method HtmlElement bdo(mixed ...$args)
+ * @method HtmlElement bdo_(mixed ...$args)
+ * @method HtmlElement cite(mixed ...$args)
+ * @method HtmlElement cite_(mixed ...$args)
+ * @method HtmlElement data(mixed ...$args)
+ * @method HtmlElement data_(mixed ...$args)
+ * @method HtmlElement dfn(mixed ...$args)
+ * @method HtmlElement dfn_(mixed ...$args)
+ * @method HtmlElement i(mixed ...$args)
+ * @method HtmlElement i_(mixed ...$args)
+ * @method HtmlElement kbd(mixed ...$args)
+ * @method HtmlElement kbd_(mixed ...$args)
+ * @method HtmlElement q(mixed ...$args)
+ * @method HtmlElement q_(mixed ...$args)
+ * @method HtmlElement rp(mixed ...$args)
+ * @method HtmlElement rp_(mixed ...$args)
+ * @method HtmlElement rt(mixed ...$args)
+ * @method HtmlElement rt_(mixed ...$args)
+ * @method HtmlElement s(mixed ...$args)
+ * @method HtmlElement s_(mixed ...$args)
+ * @method HtmlElement samp(mixed ...$args)
+ * @method HtmlElement samp_(mixed ...$args)
+ * @method HtmlElement time(mixed ...$args)
+ * @method HtmlElement time_(mixed ...$args)
+ * @method HtmlElement u(mixed ...$args)
+ * @method HtmlElement u_(mixed ...$args)
+ * @method HtmlElement var(mixed ...$args)
+ * @method HtmlElement var_(mixed ...$args)
+ * @method HtmlElement wbr(mixed ...$args)
+ * @method HtmlElement wbr_(mixed ...$args)
+ * @method HtmlElement area(mixed ...$args)
+ * @method HtmlElement area_(mixed ...$args)
+ * @method HtmlElement map(mixed ...$args)
+ * @method HtmlElement map_(mixed ...$args)
+ * @method HtmlElement track(mixed ...$args)
+ * @method HtmlElement track_(mixed ...$args)
+ * @method HtmlElement embed(mixed ...$args)
+ * @method HtmlElement embed_(mixed ...$args)
+ * @method HtmlElement object(mixed ...$args)
+ * @method HtmlElement object_(mixed ...$args)
+ * @method HtmlElement param(mixed ...$args)
+ * @method HtmlElement param_(mixed ...$args)
+ * @method HtmlElement noscript(mixed ...$args)
+ * @method HtmlElement noscript_(mixed ...$args)
+ * @method HtmlElement datalist(mixed ...$args)
+ * @method HtmlElement datalist_(mixed ...$args)
+ * @method HtmlElement meter(mixed ...$args)
+ * @method HtmlElement meter_(mixed ...$args)
+ * @method HtmlElement optgroup(mixed ...$args)
+ * @method HtmlElement optgroup_(mixed ...$args)
+ * @method HtmlElement output(mixed ...$args)
+ * @method HtmlElement output_(mixed ...$args)
+ * @method HtmlElement progress(mixed ...$args)
+ * @method HtmlElement progress_(mixed ...$args)
+ * @method HtmlElement slot(mixed ...$args)
+ * @method HtmlElement slot_(mixed ...$args)
+ * @method HtmlElement template(mixed ...$args)
+ * @method HtmlElement template_(mixed ...$args)
  */
 final class TagFactory
 {
@@ -127,7 +356,7 @@ final class TagFactory
      * Dynamically proxy method calls to {@see HtmlElement::create()}.
      *
      * @param string $name Method name representing the HTML tag.
-     * @param array<int, mixed> $arguments Arguments forwarded to the element.
+     * @param array<int|string, mixed> $arguments Arguments forwarded to the element.
      */
     public function __call(string $name, array $arguments): HtmlElement
     {
@@ -1264,22 +1493,21 @@ function Sublime(HtmlElement|RawHtml|callable|null $data, string $class = 'html'
  */
 function shouldInjectFactory(callable $callback): bool
 {
-    if ($callback instanceof Closure || is_string($callback)) {
-        if (is_string($callback) && str_contains($callback, '::')) {
-            [$class, $method] = explode('::', $callback, 2);
-            $reflection = new ReflectionMethod($class, $method);
-        } else {
-            $reflection = new ReflectionFunction($callback);
-        }
-    } elseif (is_array($callback) && count($callback) === 2) {
-        $reflection = new ReflectionMethod($callback[0], $callback[1]);
-    } elseif (is_object($callback) && method_exists($callback, '__invoke')) {
-        $reflection = new ReflectionMethod($callback, '__invoke');
-    } else {
+    $parameters = (new ReflectionFunction(Closure::fromCallable($callback)))->getParameters();
+    if ($parameters === []) {
         return false;
     }
-
-    return $reflection->getNumberOfParameters() > 0;
+    if (count($parameters) !== 1) {
+        throw new InvalidArgumentException('Sublime callback must declare zero or one parameter.');
+    }
+    $parameter = $parameters[0];
+    $type = $parameter->getType();
+    if ($parameter->isVariadic() || $parameter->isPassedByReference()
+        || ($type !== null && (!$type instanceof ReflectionNamedType
+            || strcasecmp($type->getName(), TagFactory::class) !== 0))) {
+        throw new InvalidArgumentException('Sublime callback parameter must be untyped or TagFactory-typed, by value and non-variadic.');
+    }
+    return true;
 }
 
 /**

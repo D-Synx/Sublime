@@ -31,8 +31,8 @@ final class AttributeRenderingTest extends TestCase
         yield 'uppercase normalized' => [['CLASS' => 'app', 'DATA-READY' => false], ' class="app" data-ready="false"'];
     }
 
-    #[DataProvider('attributes')]
     /** @param array<string, mixed> $attributes */
+    #[DataProvider('attributes')]
     public function testSupportedAttributes(array $attributes, string $expected): void
     {
         $element = div_(...$attributes);
@@ -73,8 +73,8 @@ final class AttributeRenderingTest extends TestCase
         yield 'style list' => [['style' => ['red']]];
     }
 
-    #[DataProvider('invalidAttributes')]
     /** @param array<string, mixed> $attributes */
+    #[DataProvider('invalidAttributes')]
     public function testInvalidAttributesFailAtConstruction(array $attributes): void
     {
         $this->expectException(InvalidArgumentException::class);
