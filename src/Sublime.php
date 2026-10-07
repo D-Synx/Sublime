@@ -208,7 +208,8 @@ final class HtmlElement implements Stringable
         'loop' => true, 'muted' => true, 'open' => true,
         'reversed' => true, 'novalidate' => true, 'formnovalidate' => true,
         'async' => true, 'defer' => true, 'ismap' => true,
-        'itemscope' => true, 'allowfullscreen' => true
+        'itemscope' => true, 'allowfullscreen' => true,
+        'inert' => true, 'nomodule' => true, 'playsinline' => true, 'default' => true
     ];
 
     /** @var array<string, true> */
@@ -223,17 +224,20 @@ final class HtmlElement implements Stringable
     /** @var list<HtmlElement|RawHtml|string> */
     private readonly array $children;
 
+    /** @var array<string, string|true> */
+    private readonly array $attributes;
+
     /**
      * @param array<string, mixed> $attributes
      * @param array<mixed> $children
      */
     public function __construct(
         private readonly string $tag,
-        private readonly array $attributes = [],
+        array $attributes = [],
         array $children = []
     ) {
         $this->validateTag($tag);
-        $this->validateAttributes($attributes);
+        $this->attributes = $this->normalizeAttributes($attributes);
         $normalized = [];
         foreach ($children as $child) {
             foreach (ChildValues::normalize($child) as $item) {
@@ -379,42 +383,12 @@ final class HtmlElement implements Stringable
         $parts = [];
 
         foreach ($this->attributes as $name => $value) {
-            // Skip null/false values
-            if ($value === null || $value === false) {
+            if ($value === true) {
+                $parts[] = $name;
                 continue;
             }
-
-            // Boolean attributes
-            if (isset(self::BOOLEAN_ATTRS[$name])) {
-                if ($value) {
-                    $parts[] = $name;
-                }
-                continue;
-            }
-
-            // Style array to string
-            if ($name === 'style' && is_array($value)) {
-                $value = $this->renderStyleArray($value);
-                if ($value === '') {
-                    continue;
-                }
-            }
-
-            // Class array to string
-            if ($name === 'class' && is_array($value)) {
-                $value = implode(' ', array_filter($value, fn ($v) => $v !== ''));
-                if ($value === '') {
-                    continue;
-                }
-            }
-
-            // URL validation for security-sensitive attributes
-            if (in_array($name, ['href', 'src', 'action', 'formaction'], true)) {
-                $this->validateUrl((string) $value);
-            }
-
             $escaped = htmlspecialchars(
-                (string) $value,
+                $value,
                 ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE,
                 'UTF-8'
             );
@@ -441,20 +415,23 @@ final class HtmlElement implements Stringable
     /**
      * Render style array to CSS string
      *
-     * @param array<string, mixed> $styles
+     * @param array<array-key, mixed> $styles
      * @return string
      */
     private function renderStyleArray(array $styles): string
     {
         $parts = [];
         foreach ($styles as $property => $value) {
-            if ($value !== null && $value !== '') {
-                // Basic CSS property validation
-                if (!preg_match('/^[a-z-]+$/i', $property)) {
-                    continue;
-                }
-                $parts[] = $property . ':' . $value;
+            if (!is_string($property) || !preg_match('/\A(?:--[a-z0-9_-]+|-?[a-z][a-z0-9-]*)\z/i', $property)) {
+                throw new InvalidArgumentException('Invalid CSS property name.');
             }
+            if ($value === null || $value === false || $value === '') {
+                continue;
+            }
+            if (!is_string($value) && !is_int($value) && !is_float($value)) {
+                throw new InvalidArgumentException("Unsupported CSS value for {$property}.");
+            }
+            $parts[] = $property . ':' . $value;
         }
         return implode(';', $parts);
     }
@@ -477,32 +454,95 @@ final class HtmlElement implements Stringable
      */
     private function validateTag(string $tag): void
     {
-        if (!preg_match('/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/i', $tag)) {
+        if (!preg_match('/\A[a-z][a-z0-9]*(?:-[a-z0-9]+)*\z/i', $tag)) {
             throw new InvalidArgumentException("Invalid HTML tag: {$tag}");
         }
     }
 
     /**
-     * Validate attributes for common security issues
+     * Validate and capture attribute values once.
      *
      * @param array<string, mixed> $attributes
+     * @return array<string, string|true>
      * @throws InvalidArgumentException
      */
-    private function validateAttributes(array $attributes): void
+    private function normalizeAttributes(array $attributes): array
     {
+        $normalized = [];
         foreach ($attributes as $name => $value) {
-            // Validate attribute name
-            if (!preg_match('/^[a-z][a-z0-9_:-]*$/i', (string) $name)) {
+            if (!is_string($name) || !preg_match('/\A[a-z][a-z0-9_:-]*\z/i', $name)) {
                 throw new InvalidArgumentException("Invalid attribute name: {$name}");
             }
-
-            // Block on* event handlers (use proper event listeners instead)
-            if (str_starts_with(strtolower($name), 'on')) {
+            $name = strtolower($name);
+            // A differently-cased duplicate replaces the preceding value.
+            unset($normalized[$name]);
+            if (str_starts_with($name, 'on')) {
                 throw new InvalidArgumentException(
                     "Inline event handlers are not allowed for security. Use addEventListener instead: {$name}"
                 );
             }
+            if ((str_starts_with($name, 'aria-') || str_starts_with($name, 'data-')) && is_bool($value)) {
+                $normalized[$name] = $value ? 'true' : 'false';
+                continue;
+            }
+            if ($value === null || $value === false) {
+                continue;
+            }
+            if (isset(self::BOOLEAN_ATTRS[$name])) {
+                if ($value !== true) {
+                    throw new InvalidArgumentException("Boolean attribute {$name} requires a boolean.");
+                }
+                $normalized[$name] = true;
+                continue;
+            }
+            if ($name === 'class' && is_array($value)) {
+                $value = $this->renderClassArray($value);
+                if ($value === '') {
+                    continue;
+                }
+            } elseif ($name === 'style' && is_array($value)) {
+                $value = $this->renderStyleArray($value);
+                if ($value === '') {
+                    continue;
+                }
+            }
+            if (!is_string($value) && !is_int($value) && !is_float($value) && !$value instanceof Stringable) {
+                throw new InvalidArgumentException("Unsupported value for attribute {$name}: " . get_debug_type($value));
+            }
+            $value = (string) $value;
+            if (in_array($name, ['href', 'src', 'action', 'formaction'], true)) {
+                $this->validateUrl($value);
+            }
+            $normalized[$name] = $value;
         }
+        return $normalized;
+    }
+
+    /** @param array<array-key, mixed> $classes */
+    private function renderClassArray(array $classes): string
+    {
+        $parts = [];
+        $list = array_is_list($classes);
+        foreach ($classes as $name => $value) {
+            if ($list) {
+                if (!is_string($value)) {
+                    throw new InvalidArgumentException('Class lists require strings.');
+                }
+                $class = trim($value);
+            } else {
+                if (!is_bool($value)) {
+                    throw new InvalidArgumentException('Class maps require boolean values.');
+                }
+                if (!$value) {
+                    continue;
+                }
+                $class = trim((string) $name);
+            }
+            if ($class !== '') {
+                $parts[] = $class;
+            }
+        }
+        return implode(' ', $parts);
     }
 
     /**
@@ -513,7 +553,7 @@ final class HtmlElement implements Stringable
      */
     private function validateUrl(string $url): void
     {
-        $url = strtolower(trim($url));
+        $url = strtolower((string) preg_replace('/[\x00-\x20\x7F]/', '', $url));
 
         foreach (self::DANGEROUS_PROTOCOLS as $protocol => $_) {
             if (str_starts_with($url, $protocol)) {
